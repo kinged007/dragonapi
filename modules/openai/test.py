@@ -1,12 +1,13 @@
-import unittest
-from .main import Module
+import pytest
+from main import Module
 
-class TestOpenAiModule(unittest.TestCase):
+class TestOpenAiModule:
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_module(self):
         self.module = Module()
 
-    def test_completion_endpoint(self):
+    def test_completion_endpoint(self, setup_module):
         # Mock messages to simulate a conversation
         messages = [
             {
@@ -22,15 +23,13 @@ class TestOpenAiModule(unittest.TestCase):
         # Call the completion method
         response = self.module.completion(messages=messages, mock_response="This is a mockup message for debug purposes.", api_key="mockup_api_key", model="gpt-3.5-turbo")
         print(response)
-        # Check if the response is not None
-        self.assertIsNotNone(response, "The response should not be None")
+        # Assert that the response is not None
+        assert response is not None, "The response should not be None"
 
         # Check if the response has the expected attributes
-        self.assertTrue(hasattr(response, 'choices'), "The response should have 'choices' attribute")
-        self.assertIsInstance(response.choices, list, "The 'choices' attribute should be a list")
+        assert hasattr(response, 'choices'), "The response should have 'choices' attribute"
+        assert isinstance(response.choices, list), "The 'choices' attribute should be a list"
 
         # Check if the response contains a message from the assistant
-        self.assertTrue(any(choice.get('role') == 'assistant' for choice in response.choices), "The response should contain a message from the assistant")
+        assert any(choice.get('role') == 'assistant' for choice in response.choices), "The response should contain a message from the assistant"
 
-if __name__ == '__main__':
-    unittest.main()
