@@ -20,8 +20,8 @@ class TestOpenAiModule(unittest.TestCase):
         ]
 
         # Call the completion method
-        response = self.module.completion(messages=messages)
-
+        response = self.module.completion(messages=messages, mock_response="This is a mockup message for debug purposes.", api_key="mockup_api_key", model="gpt-3.5-turbo")
+        print(response)
         # Check if the response is not None
         self.assertIsNotNone(response, "The response should not be None")
 
