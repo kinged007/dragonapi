@@ -1,4 +1,5 @@
-from beanie import Document
+# from beanie import Document
+from mongoengine import connect, Document, StringField, DictField, DateTimeField, DynamicField
 from fastapi.security import HTTPBasicCredentials
 from pydantic import ConfigDict, BaseModel, EmailStr
 from typing import Type, Any, Dict
@@ -6,16 +7,18 @@ from datetime import datetime, timezone
 
 class Task(Document):
     
-    func_name: str
-    args: Any = None
-    kwargs: Dict[str, Any] = {}
-    status: str = "queued"
-    created_at: datetime = datetime.now(tz=timezone.utc)
-    result: Any = None
+    func_name = StringField(required=True)
+    args = DictField()
+    kwargs = DictField()
+    status = StringField(default="queued")
+    created_at = DateTimeField(default=datetime.now)
+    result = DynamicField()
     
-    class Settings:
-        name = "tasks"
-        
+    meta = {
+        "collection": "tasks"
+    }
+    
+    
 # class Job(Document):
     
     

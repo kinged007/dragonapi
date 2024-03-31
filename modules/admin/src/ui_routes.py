@@ -6,11 +6,12 @@ from loguru import logger as log
 from importlib import import_module
 from bson import ObjectId
 from importlib import import_module, util
-from beanie import Document
+from mongoengine import Document
 from os import path
 import inspect
 
 # from rich import print
+from utils.mongo import mongo_to_dict
 
 # Import module main class
 from .. import Module
@@ -50,8 +51,10 @@ async def login_using_access_token(
 @router.get('/modules', dependencies=[Depends(access_token_bearer)])
 async def get_modules(name: str = Query(None, description="Module name to filter") ):
 
-    res = await ModuleConfig.find({}).to_list()
-
+    # res = await ModuleConfig.find({}).to_list()
+    res = ModuleConfig.objects.all()
+    
+    print(res)
     output = []
 
     if res:
@@ -71,7 +74,7 @@ async def get_modules(name: str = Query(None, description="Module name to filter
                     _db_module = [r for r in res if r.module == module_name]
                     if _db_module:
                         _db_config = _db_module[0].config
-
+                    
                     # ignore keys that are helpers, such as _help, _field, _options
                     _db_config = {
                         k: v for k, v in _db_config.items() if not any(
@@ -84,14 +87,12 @@ async def get_modules(name: str = Query(None, description="Module name to filter
                     # Get Modules config and merge with database values
                     module_config = import_module(f"modules.{module_name}.config")
                     config = module_config.Config(**_db_config)
-                    #TODO enable the use of pydantic basemodels for config types. 
-                    # Currently, this function cannot process pydantic models from dicts from the DB.
-
-                    # print(type(config),config)
+                    #TODO enable the use of pydantic basemodels for config types. Try use custom pydantic model with custom model_dump() method.
+                    # I think its already active? To TEST
 
                     _dict = {
-                        **_db_module[0].model_dump(),
-                        "config": config.model_dump()
+                        **mongo_to_dict(_db_module[0].to_mongo()), # Using MongoEngine Document
+                        "config": config.model_dump() # Using Pydantic Model
                     }
 
                     # print(_dict)
@@ -99,7 +100,8 @@ async def get_modules(name: str = Query(None, description="Module name to filter
 
             except Exception as e:
                 log.error(f"Error processing module folder {module_folder}: {e}")
-
+    
+    
     return {"data": output}
 
 # TODO Change these endpoints that refer to single item, to use singlular names. eg. /module/{id} instead of /modules/{id}
@@ -110,7 +112,8 @@ async def update_module_config(id: str, data: dict = Body(..., example={"key": "
     """
     if id and data:
 
-        res = await ModuleConfig.find_one({"_id": ObjectId(id) })
+        # res = await ModuleConfig.find_one({"_id": ObjectId(id) })
+        res = ModuleConfig.objects(id=ObjectId(id)).first()
 
         if not res:
             return JSONResponse(status_code=404, content={"message": "Module not found."})
@@ -126,23 +129,23 @@ async def update_module_config(id: str, data: dict = Body(..., example={"key": "
                     res.config[key] = value
 
             # print(res)
-
-            if await res.save():
-                # TODO Clear cache for get_modules
+            
+            try:
+                res.save()
                 return JSONResponse(status_code=200, content={"message": "Module updated."})
-
-            else:
-
+            except Exception as e:
+                log.error(f"Failed to update module: {e}")
                 return JSONResponse(status_code=500, content={"message": "Failed to update module."})
-
+            
     return JSONResponse(status_code=400, content={"message": "Invalid request."})
 
 
 @router.get('/cronjobs', dependencies=[Depends(access_token_bearer)])
 async def get_cron_jobs():
 
-    res = await CronExecutor.find({}).to_list()
-
+    # res = await CronExecutor.find({}).to_list()
+    res = CronExecutor.objects.all()
+    
     output = []
 
     if res:
@@ -163,8 +166,8 @@ async def get_cron_jobs():
                     # # Get Modules config and merge with database values
                     # module_config = import_module(f"modules.{module_name}.config")
                     # config = module_config.Config(**_db_config)
-
-                    output.append( _db_module[0].model_dump() )
+                    
+                    output.append( mongo_to_dict(_db_module[0].to_mongo()) )
 
             except Exception as e:
                 log.error(f"Error processing module folder {module_folder}: {e}")
@@ -174,8 +177,9 @@ async def get_cron_jobs():
 
 @router.post('/cronjobs/{id}/run', dependencies=[Depends(access_token_bearer)])
 async def run_specific_cronjob_now(id: str):
-
-    res = await CronExecutor.find_one({'_id': ObjectId(id)})
+    log.debug(id)
+    # res = await CronExecutor.find_one({'_id': ObjectId(id)})
+    res = CronExecutor.objects(id=ObjectId(id)).first()
 
     if not res:
         return JSONResponse(status_code=404, content={"message": "Cron job not found."})
@@ -200,8 +204,8 @@ async def get_dashboard_data():
 
     data = {
         "totals": {
-            "modules": await ModuleConfig.count(),
-            "cronjobs": await CronExecutor.count(),
+            "modules": ModuleConfig.objects.count(),
+            "cronjobs": CronExecutor.objects.count(),
         },
         "config": {
             "debug": DEBUG,
@@ -229,7 +233,7 @@ async def get_dashboard_data():
                     if inspect.isclass(obj) and issubclass(obj, Document) and obj is not Document:
                         log.info(f"Imported {name} from modules.{module}.schema")
                         tables_list.append(obj)
-                        data['totals'][f"{name.lower()}"] = await obj.count()
+                        data['totals'][f"{name.lower()}"] = obj.objects.count()
 
         except Exception as e:
             print(f"Error processing module folder {module_folder}: {e}")
@@ -239,14 +243,15 @@ async def get_dashboard_data():
 @router.get('/api-keys', dependencies=[Depends(access_token_bearer)])
 async def get_api_keys():
 
-    res = await ApiKeys.find({}).to_list()
+    # res = await ApiKeys.find({}).to_list()
+    res = ApiKeys.objects.all()
 
     # print(res)
 
     output = []
 
     for r in res:
-        output.append(r.model_dump())
+        output.append( mongo_to_dict(r.to_mongo()))
 
     return {"data": output}
 
@@ -259,11 +264,12 @@ async def create_api_key(data: dict = Body(..., example={"name": "My API Key", "
 
             data['api_key'] = generate_api_key()
             api_key = ApiKeys(**data)
-
-            if await api_key.save():
+            
+            try:
+                api_key.save()
                 return JSONResponse(status_code=200, content={"message": "API Key created."})
-
-            else:
+            except Exception as e:
+                log.error(f"Failed to create API Key: {e}")
                 return JSONResponse(status_code=500, content={"message": "Failed to create API Key."})
 
     return JSONResponse(status_code=400, content={"message": "Invalid request."})
@@ -277,7 +283,8 @@ async def update_api_key(id:str, data: dict = Body(..., example={"name": "My API
 
         if 'name' in data and 'permissions' in data:
 
-            api_key = await ApiKeys.find_one({'_id': ObjectId(id)})
+            # api_key = await ApiKeys.find_one({'_id': ObjectId(id)})
+            api_key = ApiKeys.objects(id=ObjectId(id)).first()
 
             if not api_key:
                 return JSONResponse(status_code=404, content={"message": "API Key not found."})
@@ -289,16 +296,13 @@ async def update_api_key(id:str, data: dict = Body(..., example={"name": "My API
                     setattr(api_key, key, value)
 
             # print(api_key)
-
-            if await api_key.save():
-
+            try:
+                api_key.save()
                 return JSONResponse(status_code=200, content={"message": "Api Key updated."})
-
-            else:
-
+            except Exception as e:
+                log.error(f"Failed to update Api Key: {e}")
                 return JSONResponse(status_code=500, content={"message": "Failed to update Api Key."})
-
-
+            
     return JSONResponse(status_code=400, content={"message": "Invalid request."})
 
 @router.delete('/api-keys/{id}', dependencies=[Depends(access_token_bearer)])
@@ -306,26 +310,25 @@ async def delete_api_key(id:str):
 
     if id:
 
-        api_key = await ApiKeys.find_one({'_id': ObjectId(id)})
+        # api_key = await ApiKeys.find_one({'_id': ObjectId(id)})
+        api_key = ApiKeys.objects(id=ObjectId(id)).first()
 
         if not api_key:
             return JSONResponse(status_code=404, content={"message": "API Key not found."})
-
-        if await api_key.delete():
-
+        
+        try:
+            api_key.delete()
             return JSONResponse(status_code=200, content={"message": "Api Key deleted."})
-
-        else:
-
-            return JSONResponse(status_code=500, content={"message": "Failed to delete Api Key."})
-
+        except Exception as e:
+            log.error(f"Failed to delete Api Key: {e}")
+        
+        return JSONResponse(status_code=500, content={"message": "Failed to delete Api Key."})
 
     return JSONResponse(status_code=400, content={"message": "Invalid request."})
 
 
 @router.get('/api-keys/permissions', dependencies=[Depends(access_token_bearer)])
 async def get_api_key_permissions():
-
     return {"data": list_permissions() }
 
 if DEBUG:

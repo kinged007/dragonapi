@@ -1,7 +1,8 @@
 # Beanie tables to Load on Startup + Schema classes to be used throughout the module
 # Classes with the Document class are automatically loaded into the database at startup
 
-from beanie import Document
+# from beanie import Document
+from mongoengine import connect, Document
 from pydantic import ConfigDict, BaseModel, EmailStr
 from enum import Enum
 from os import getenv

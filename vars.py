@@ -4,7 +4,7 @@ BASE_DIR = path.dirname(path.abspath(__file__))
 DEBUG = True if str(getenv("DEBUG","false")).lower() == "true" else False
 LOGGING_LEVEL = "DEBUG" if DEBUG else getenv("LOGGING_LEVEL", "INFO").upper()
 ENVIRONMENT = getenv("ENVIRONMENT", "development").lower()
-APP_VERSION = "0.0.3"
+APP_VERSION = "0.0.4"
 BETTER_STACK_TOKEN = getenv("BETTER_STACK_TOKEN", None)
 SENTRY_DSN = getenv("SENTRY_DSN", None)
 

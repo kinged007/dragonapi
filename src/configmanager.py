@@ -52,9 +52,10 @@ class ConfigManager(metaclass=SingletonMeta):
         log.info(f"Loading '{module_name}' config.")
         
         # Get module config from database
-        _dbconfig = await ModuleConfig.find_one({
-            "module": module_name
-        })
+        # _dbconfig = ModuleConfig.find_one({
+        #     "module": module_name
+        # })
+        _dbconfig = ModuleConfig.objects(module=module_name).first()
 
         # Fetch module config file
         _import = import_module(f'modules.{module_name}.config')
@@ -65,9 +66,11 @@ class ConfigManager(metaclass=SingletonMeta):
             if not _dbconfig:
                 _dbconfig = ModuleConfig(module=module_name, config=remove_ui_params(module_config.model_dump()))
                 log.debug(f"No config found for {module_name}. Creating new config.")
-                if not await _dbconfig.create():
-                    raise Exception(f"Failed to create config for '{module_name}'")
-                
+                try:
+                    _dbconfig.save()
+                except Exception as e:
+                    raise Exception(f"Failed to create config for '{module_name}'") from e
+    
             # print(type(_dbconfig),_dbconfig)
             # Merge app config with db config
             # TODO TEST apply filters for suffixes which should not be saved in the database. eg. _help, _options, ...
@@ -75,7 +78,11 @@ class ConfigManager(metaclass=SingletonMeta):
             if remove_ui_params(_dbconfig.config) != remove_ui_params(_merged_config):
                 _dbconfig.config = remove_ui_params(_merged_config)
                 log.debug(f"'{module_name}' Module Config Updated.")
-                await _dbconfig.save()
+                try:
+                    _dbconfig.save()
+                except Exception as e:
+                    raise Exception(f"Failed to create config for '{module_name}'") from e
+
             self._config[module_name] = _dbconfig.config
             await sleep(0.1)
                 
@@ -100,9 +107,10 @@ class ConfigManager(metaclass=SingletonMeta):
             raise Exception("Cannot edit common configuration.") # NOTE May need to change this to allow it.
         
         # Try to update config
-        _dbconfig = await ModuleConfig.find_one({
-            "module": module_name
-        })
+        # _dbconfig = ModuleConfig.find_one({
+        #     "module": module_name
+        # })
+        _dbconfig = ModuleConfig.objects(module=module_name).first()
         
         # Update config parameter with new value
         _dbconfig.config[key] = value
@@ -110,10 +118,13 @@ class ConfigManager(metaclass=SingletonMeta):
         log.debug("Updating config for '"+module_name+"'."+key)
         
         # Save config
-        if await _dbconfig.save():
+        try:
+            _dbconfig.save()
             # Update instance attribute
             self._config[module_name][key] = value
             return True
+        except Exception as e:
+            raise Exception(f"Failed to create config for '{module_name}'") from e
         
         return False
 

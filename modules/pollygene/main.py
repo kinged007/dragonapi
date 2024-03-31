@@ -40,15 +40,7 @@ class Module(BaseModuleClass):
     # callable via self.permission("permission_name")
 
     async def init(self):
-
-        if not self.db:
-            self.db = directus.Module()
-            if not self.db.test_connection():
-                log.error("Failed to connect to Directus")
-        if not self.wp:
-            self.wp = wordpress.Module()
-            if not self.wp.test_connection():
-                log.error("Failed to connect to Wordpress")
+        pass
 
     async def run_cron(self):
         """
@@ -63,20 +55,34 @@ class Module(BaseModuleClass):
         This method ensures that the database is connected before any operations are performed.
         """
         if not self.db:
-            # Connect to the database
-            log.debug("Connecting to database.")
-            # if not self.config_get('directus_url') or not self.config_get('directus_token'):
-            #     raise Exception("Directus URL or Access Token not set.")
-            # self.db = Directus(self.config_get('directus_url'), self.config_get('directus_token'))
             self.db = directus.Module()
-            if not self.db:
-                raise Exception("Failed to connect to Directus.")
-            print(type(self.db), self.db)
-        if not self.db.test_connection():
-            self.db = None
-            raise Exception("Failed to connect to Directus.")
+            if not self.db.test_connection():
+                log.error("Failed to connect to Directus")
+        if not self.wp:
+            self.wp = wordpress.Module()
+            if not self.wp.test_connection():
+                log.error("Failed to connect to Wordpress")
+        
+        if self.db and self.wp:
+            log.debug("DB is connected.")
+            return True
+        
+        log.debug("DB is not connected.")
+        return False
+        # if not self.db:
+        #     # Connect to the database
+        #     log.debug("Connecting to database.")
+        #     # if not self.config_get('directus_url') or not self.config_get('directus_token'):
+        #     #     raise Exception("Directus URL or Access Token not set.")
+        #     # self.db = Directus(self.config_get('directus_url'), self.config_get('directus_token'))
+        #     self.db = directus.Module()
+        #     if not self.db:
+        #         raise Exception("Failed to connect to Directus.")
+        #     print(type(self.db), self.db)
+        # if not self.db.test_connection():
+        #     self.db = None
+        #     raise Exception("Failed to connect to Directus.")
 
-        log.debug("DB is connected.")
         return True
 
     def get_species(self):

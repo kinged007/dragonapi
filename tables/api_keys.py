@@ -1,13 +1,8 @@
-from beanie import Document
-
+from mongoengine import Document, StringField, ListField
 
 class ApiKeys(Document):
-    # user_id: str
-    # project_id: str
-    
-    name: str
-    api_key: str
-    permissions: list[str] = []
-    
-    class Settings:
-        name = "api_keys"
+    name = StringField(required=True)
+    api_key = StringField(required=True)
+    permissions = ListField(StringField(), default=list)
+
+    meta = {'collection': 'api_keys'}

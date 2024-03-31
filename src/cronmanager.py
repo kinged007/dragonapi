@@ -53,9 +53,13 @@ class CronManager(BaseModel):
             _update = True
         
         # Save the cron executor
-        if _update and not await self.cron_executor.save():
-            log.error(f"Failed to save cron executor for '{self.module_name}'")
-            return False
+        if _update:
+            try:
+                self.cron_executor.save()
+            except Exception as e:
+                raise Exception(f"Failed to save cron executor for '{self.module_name}'") from e
+                log.error(f"Failed to save cron executor for '{self.module_name}'")
+                return False
         
         # Return True if all checks pass
         return True
@@ -90,7 +94,7 @@ class CronManager(BaseModel):
         if len(self.cron_executor.log) > cron_logs_to_keep: 
             self.cron_executor.log = self.cron_executor.log[-cron_logs_to_keep:]
         
-        await self.cron_executor.save()
+        self.cron_executor.save()
 
     def execute_now(self):
         """
@@ -138,7 +142,10 @@ class CronManager(BaseModel):
         self.cron_executor.next_execution = self.next_iter(self.config.get("cron_schedule", None))
         # if log_level("info") >= log_level():
         #     self.cron_executor.log.append(self._log_format("Cron Job execution completed.", "info"))
-        if not await self.cron_executor.save():
+        try:
+            self.cron_executor.save()
+        except Exception as e:
+            raise Exception(f"Failed to save cron executor for '{self.module_name}'") from e
             log.error(f"Failed to save cron executor for '{self.module_name}'")
             return False
         

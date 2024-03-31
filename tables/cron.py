@@ -1,15 +1,15 @@
-from beanie import Document
+# from beanie import Document
+from mongoengine import Document, StringField, DateTimeField, BooleanField, ListField
 from utils.datetime import datetime, utc_now
 from typing import Optional
 
 class CronExecutor(Document):
-    
-    module: str
-    last_executed: Optional[datetime] = utc_now()
-    next_execution: Optional[datetime] = utc_now()
-    # interval: int = 5 # minutes
-    active: bool = True
-    log: list = []
-    
-    class Settings:
-        name = "cron_executor"
+    module = StringField(required=True)
+    last_executed = DateTimeField(default=utc_now)
+    next_execution = DateTimeField(default=utc_now)
+    active = BooleanField(default=True)
+    log = ListField(default=list)
+
+    meta = {
+        'collection': 'cron_executor'
+    }
