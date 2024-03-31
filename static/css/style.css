@@ -1,0 +1,16 @@
+form {
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    display: inline-block;
+}
+
+label, input, button {
+    display: block;
+    margin-bottom: 10px;
+}
+
+input, button {
+    padding: 10px;
+    width: 200px;
+}
