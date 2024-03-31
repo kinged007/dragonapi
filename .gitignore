@@ -162,7 +162,7 @@ node_modules
 # *.yml
 outputs
 
-.notes
+# .notes
 
 # Ignore these
 # Dockerfile
