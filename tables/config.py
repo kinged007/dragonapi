@@ -1,13 +1,12 @@
-# from beanie import Document
-from mongoengine import Document, StringField, DictField
+from beanie import Document
 
 
 class ModuleConfig(Document):
     # user_id: str
     # project_id: str
     
-    module = StringField(required=True, unique=True)
-    config = DictField()
+    module: str
+    config: dict    
     
-    meta = {'collection': 'module_config'}
-    
+    class Settings:
+        name = "module_config"

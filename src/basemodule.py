@@ -153,19 +153,16 @@ class BaseModuleClass(BaseModel):
             return False
         
         # Get cron executor for module:
-        # cron = await CronExecutor.find_one({
-        #     "module": self.module_name
-        # })
-        cron = CronExecutor.objects(module=self.module_name).first()
+        cron = await CronExecutor.find_one({
+            "module": self.module_name
+        })
         
         # If CronExecutor is not found, create it
         try:
             if not cron:
                 log.debug(f"CronExecutor not found for '{self.module_name}'. Creating new one.")
                 cron = CronExecutor(module=self.module_name)
-                try:
-                    cron.save()
-                except Exception as e:
+                if not await cron.create():
                     raise Exception(f"Failed to create cron executor for '{self.module_name}'")
 
         except Exception as e:

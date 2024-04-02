@@ -43,10 +43,9 @@ async def verify_api(api_key: str) -> bool:
     isTokenValid: bool = False
     # log.debug("Verifying API Key: " +  str(api_key))
     try:
-        # valid = await ApiKeys.find_one({
-        #     "api_key" : api_key
-        # })
-        valid = ApiKeys.objects(api_key=api_key).first()
+        valid = await ApiKeys.find_one({
+            "api_key" : api_key
+        })
         # log.debug(valid)
         
         if valid:
@@ -87,10 +86,9 @@ class APIBearer(HTTPBearer):
 api_key_bearer = APIBearer()
 
 async def get_owner(api_key: Annotated[str, Depends(api_key_bearer)]) -> Admin:
-    # valid = await ApiKeys.find_one({
-    #     "api_key" : api_key
-    # })
-    valid = ApiKeys.objects(api_key=api_key).first()
+    valid = await ApiKeys.find_one({
+        "api_key" : api_key
+    })
     
     try:
         if valid:
@@ -153,10 +151,9 @@ def verify_permissions(permission: str = None):
     async def _verify_permissions(api_key: str = Depends(api_key_bearer)):
         # Replace this with your actual permission checking logic
         log.debug("Verifying Permissions: " + str(api_key)[:10] + "... - " + str(permission))
-        # _api = await ApiKeys.find_one({
-        #         "api_key" : api_key
-        #     })
-        _api = ApiKeys.objects(api_key=api_key).first()
+        _api = await ApiKeys.find_one({
+                "api_key" : api_key
+            })
         # print(_api)
         if _api:
             # log.debug("Verify API key = PASS")

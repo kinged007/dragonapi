@@ -1,17 +1,16 @@
-# from beanie import Document
+from beanie import Document
 from fastapi.security import HTTPBasicCredentials
 from pydantic import ConfigDict, BaseModel, EmailStr
-from mongoengine import Document, StringField, EmailField
+
 
 class Admin(Document):
-    name = StringField(required=True)
-    email = EmailField(required=True)
-    password = StringField(required=True)
+    name: str
+    email: EmailStr
+    password: str
 
-    meta = {
-        "collection": "admin",
-    }
-
+    class Settings:
+        name = "admin"
+        
     model_config = ConfigDict(json_schema_extra={
         "example": {
             "name": "Abdulazeez Abdulazeez Adeshina",

@@ -50,10 +50,9 @@ async def check_and_execute_cron(module_name): # TODO Move this function into cl
     log.debug(">>>>>>>> check_and_execute_cron " +str(module_name))
     
     # Get cron executor for module:
-    # cron = await CronExecutor.find_one({
-    #     "module": module_name
-    # })
-    cron = CronExecutor.objects(module=module_name).first()
+    cron = await CronExecutor.find_one({
+        "module": module_name
+    })
     
     
     

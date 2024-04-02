@@ -1,7 +1,6 @@
 from typing import Optional, Any
 
-# from beanie import Document
-from mongoengine import connect, Document
+from beanie import Document
 from pydantic import ConfigDict, BaseModel, EmailStr
 
 # TODO Users is a feature for developers. Not a requirement. So lets move this out to V1.

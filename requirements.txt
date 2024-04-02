@@ -1,16 +1,16 @@
-beanie==1.24.0 # DEPRECATE v0.0.4
-motor==3.3.2 # DEPRECATE v0.0.4
+beanie==1.24.0
 beautifulsoup4==4.12.2
 courlan==0.9.5
 fastapi==0.108.0
+# gpt_researcher==0.0.8
 loguru==0.7.2
+motor==3.3.2
 passlib==1.7.4
 pydantic==2.5.3
 # pydantic_settings==2.1.0
 pydantic[email]
 PyJWT==2.8.0
 pymongo==4.6.1
-mongoengine==0.24.2
 python-dotenv==1.0.0
 requests_html==0.10.0
 rich==13.7.0

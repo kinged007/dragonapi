@@ -3,21 +3,14 @@ from fastapi import FastAPI, APIRouter, Depends, Request, BackgroundTasks #, Bod
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-
-# DEPRECATE from 0.0.4
 from beanie import init_beanie
-# from beanie import Document
 from motor.motor_asyncio import AsyncIOMotorClient
-
-# New MongoDB manager from v0.0.4
-from mongoengine import connect, Document
-from pymongo import MongoClient
-
 from time import time, sleep
 from loguru import logger as log
 import traceback
 import os, asyncio
 from importlib import import_module, util
+from beanie import Document
 import inspect
 from dotenv import load_dotenv
 import sys
@@ -109,7 +102,7 @@ async def lifespan(application: FastAPI):
     # lifespan_variables["test"] = name_of_function
     log.debug("Loading lifespan function")
     # Initialize MongoDB instances
-    start_database()
+    await start_database()
     # Initialize Module configurations and DB schemas
     await start_modules()
     
@@ -124,74 +117,20 @@ async def lifespan(application: FastAPI):
 # @app.on_event("startup") # DEPRECATED https://fastapi.tiangolo.com/advanced/events/#async-context-manager
 
 # executed on each new incoming request
-# async def start_database():
-#     global db_initialised
-        
-#     if db_initialised:
-#         log.info("MongoDB Already Initialized")
-#         return db_initialised
-
-#     client = AsyncIOMotorClient(os.environ['DATABASE_URL'])
-#     # Specify the database
-#     database_name = 'production' if ENVIRONMENT.lower() in "production" else ENVIRONMENT.lower()[:3]+"_db"
-#     database = client[database_name]
-    
-#     # database = client.get_default_database()
-#     log.info(f"Connecting to database: {database.name}")
-#     tables_list = [ApiKeys, CronExecutor, ModuleConfig]
-    
-#     # Fetch database tables from Schema documents that extend the Document type and autoload them if the module is active.
-#     for module_folder, module in get_module_folders_generator():
-#         try:
-#             tables_file = os.path.join(module_folder, 'schema.py')
-#             if os.path.exists(os.path.join(module_folder, 'schema.py')):
-#                 log.debug(f"Importing 'modules.{module}.schema'...")
-                
-#                 # Load the module
-#                 spec = util.spec_from_file_location(f"{module_folder}.tables", tables_file)
-#                 tables = util.module_from_spec(spec)
-#                 spec.loader.exec_module(tables)
-
-#                 # Import classes of type Document
-#                 for name, obj in inspect.getmembers(tables):
-#                     if inspect.isclass(obj) and issubclass(obj, Document) and obj is not Document:
-#                         log.info(f"Imported {name} from modules.{module}.schema")
-#                         tables_list.append(obj)
-
-#         except Exception as e:
-#             print(f"Error processing module folder {module_folder}: {e}")
-                
-                
-#     await init_beanie(database=database, document_models=tables_list)
-    
-#     for table in tables_list:
-#         collection = table.get_motor_collection()
-#         log.debug(f"Connected to DB collection: {collection.name}")
-        
-#     log.info("MongoDB Initialized tables: " + str([t.__name__ for t in tables_list]))
-    
-#     db_initialised = True
-    
-#     return db_initialised
-
-# New startup method that uses PyMongo and MongoEngine
-from mongoengine import connect, Document
-import os
-
-def start_database():
+async def start_database():
     global db_initialised
         
     if db_initialised:
         log.info("MongoDB Already Initialized")
         return db_initialised
 
+    client = AsyncIOMotorClient(os.environ['DATABASE_URL'])
     # Specify the database
     database_name = 'production' if ENVIRONMENT.lower() in "production" else ENVIRONMENT.lower()[:3]+"_db"
+    database = client[database_name]
     
-    # Connect to the database
-    db = connect(db=database_name, host=os.environ['DATABASE_URL'])
-    
-    log.info(f"Connecting to database: {database_name}")
+    # database = client.get_default_database()
+    log.info(f"Connecting to database: {database.name}")
     tables_list = [ApiKeys, CronExecutor, ModuleConfig]
     
     # Fetch database tables from Schema documents that extend the Document type and autoload them if the module is active.
@@ -215,9 +154,12 @@ def start_database():
         except Exception as e:
             print(f"Error processing module folder {module_folder}: {e}")
                 
+                
+    await init_beanie(database=database, document_models=tables_list)
+    
     for table in tables_list:
-        # With MongoEngine, you don't need to manually get the collection
-        log.debug(f"Connected to DB collection: {table.__name__}")
+        collection = table.get_motor_collection()
+        log.debug(f"Connected to DB collection: {collection.name}")
         
     log.info("MongoDB Initialized tables: " + str([t.__name__ for t in tables_list]))
     

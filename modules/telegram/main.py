@@ -49,7 +49,7 @@ class Module(BaseModuleClass):
         self.url = f"https://api.telegram.org/bot{self.token}"
 
     def send_message(self, chat_id, message, parse_mode="Markdown"):
-        # TODO move this to a task handler, such as RQ
+        
         log.debug("Sending message to Telegram...")
         
         try:

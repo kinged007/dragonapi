@@ -10,7 +10,7 @@ from loguru import logger as log
 
 from tables.task import Task
 
-# NOTE: Maybe migrate to RQ instead of handling this ourselves? RQ does not support async functions though...
+# NOTE: Maybe migrate to RQ instead of handling this ourselves?
 # https://python-rq.org/
 
 

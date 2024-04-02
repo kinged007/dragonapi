@@ -77,10 +77,10 @@ class BaseModuleConfig():
         
         # Get database
         # TODO Use Directus db instead of MongoDB
-        # _dbconfig = await ModuleConfig.find_one({
-        #     "module": self.ModuleName
-        # })
-        _dbconfig = ModuleConfig.objects(module=self.ModuleName).first()
+        _dbconfig = await ModuleConfig.find_one({
+            "module": self.ModuleName
+        })
+        
         # print("DB Config", _dbconfig)
         
         try:
@@ -110,10 +110,9 @@ class BaseModuleConfig():
     async def set(self, attr_name, value):
         
         # Try to update config
-        # _dbconfig = await ModuleConfig.find_one({
-        #     "module": self.ModuleName
-        # })
-        _dbconfig = ModuleConfig.objects(module=self.ModuleName).first()
+        _dbconfig = await ModuleConfig.find_one({
+            "module": self.ModuleName
+        })
         # Update config parameter with new value
         _dbconfig.config[attr_name] = value
         
