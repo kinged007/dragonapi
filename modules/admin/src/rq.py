@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Query, Request, Depends, Body
 from fastapi.responses import JSONResponse
 from loguru import logger as log
@@ -38,12 +37,54 @@ from utils.cache import global_cache
 router = APIRouter( include_in_schema=DEBUG )
 module = Module()
 
+@router.get('/queues')
+async def get_queues():
+    """
+    Get a list of all queues.
+    """
+    queues = [queue.name for queue in queue.connection.queues]
+    return JSONResponse(content={"queues": queues})
+
+@router.get('/queues/{queue_name}/jobs')
+async def get_jobs(queue_name: str):
+    """
+    Get a list of jobs in a specific queue.
+    """
+    rq_queue = queue.connection.get_queue(queue_name)
+    jobs = rq_queue.job_ids  # Getting job IDs for demonstration purposes
+    return JSONResponse(content={"jobs": jobs})
+
+@router.get('/workers')
+async def get_workers():
+    """
+    Get a list of all workers.
+    """
+    workers = [worker.name for worker in queue.connection.workers]
+    return JSONResponse(content={"workers": workers})
+
+@router.put('/jobs/{job_id}/reschedule')
+async def reschedule_job(job_id: str, new_time: int):
+    """
+    Reschedule a job to a new time.
+    """
+    job = queue.fetch_job(job_id)
+    if job:
+        job.reschedule(new_time)
+        return JSONResponse(content={"message": "Job rescheduled"})
+    else:
+        return JSONResponse(content={"message": "Job not found"}, status_code=404)
+
+@router.delete('/jobs/{job_id}')
+async def delete_job(job_id: str):
+    """
+    Delete a job.
+    """
+    job = queue.fetch_job(job_id)
+    if job:
+        job.delete()
+        return JSONResponse(content={"message": "Job deleted"})
+    else:
+        return JSONResponse(content={"message": "Job not found"}, status_code=404)
+
 from src.task_manager import TaskManager
 queue = TaskManager.queue # gets the rq.Queue object
-
-@router.get('/queues')
-async def redis_queue_queues(request: Request):
-    """
-    Gets a list of all queues in the Redis Queue
-    """
-    pass
