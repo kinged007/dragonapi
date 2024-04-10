@@ -3,6 +3,9 @@ from redis import Redis
 from rq import Queue
 from test_tasks import test_func_one, test_func_two, test_func_three
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # Load environment variables for Redis configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = os.getenv('REDIS_PORT', 6379)
