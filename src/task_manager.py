@@ -38,9 +38,9 @@ class TaskManager:
         # self.queue = Queue(connection="redis://default:1xC1TvKg4AXAjJ8gOrz3blEPjFi8Wprc@redis-10440.c3.eu-west-1-2.ec2.cloud.redislabs.com:10440") #Queue(connection=self.client)
         # # Get the tasks collection
         # self.tasks_collection = Job #self.db.tasks
-        pass
-
-    def enqueue(self, func, *args, **kwargs):
+class TaskManager:
+    @staticmethod
+    def enqueue(func, *args, **kwargs):
         """
         Enqueue a function to be processed by the RQ worker.
 
