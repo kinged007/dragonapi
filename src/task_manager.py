@@ -27,9 +27,26 @@ if _is_async:
     task_manager = Queue('task_manager', connection=redis_conn)
 else:
     task_manager = Queue('task_manager', is_async=False)
+from rq.decorators import job as rq_job
 
 class TaskManager:
     
+
+    @staticmethod
+    def job(queue_name, *args, **kwargs):
+        """
+        Decorator that adds a function to the specified RQ queue.
+        This replicates the @job decorator from RQ, but uses the predefined connection.
+
+        :param queue_name: The name of the queue.
+        :param args: Additional arguments for the decorator.
+        :param kwargs: Additional keyword arguments for the decorator.
+        :return: Decorated function.
+        """
+        def decorator(func):
+            return rq_job(queue_name, connection=task_manager.connection, *args, **kwargs)(func)
+        return decorator
+
     @staticmethod
     def enqueue(func, *args, **kwargs):
         """
