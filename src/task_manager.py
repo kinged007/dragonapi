@@ -1,4 +1,3 @@
-
 ### Redis Queue Manager
 from typing import Any, Dict
 from beanie import init_beanie
@@ -40,3 +39,15 @@ class TaskManager:
         # # Get the tasks collection
         # self.tasks_collection = Job #self.db.tasks
         pass
+
+    def enqueue(self, func, *args, **kwargs):
+        """
+        Enqueue a function to be processed by the RQ worker.
+
+        :param func: The function to be enqueued.
+        :param args: Arguments to pass to the function.
+        :param kwargs: Keyword arguments to pass to the function.
+        :return: Job instance representing the enqueued job.
+        """
+        job = task_manager.enqueue(func, *args, **kwargs)
+        return job
