@@ -72,6 +72,7 @@ fi
 # Check if Redis is available and start the worker
 if [ -n "$REDIS_HOST" ]; then
     echo Starting the Redis worker
+    # echo "$REDIS_HOST $REDIS_PORT $REDIS_PASSWORD"
     REDIS_PORT=${REDIS_PORT:-'6379'}
     if ! [[ "$REDIS_PORT" =~ ^[0-9]+$ ]]; then
         echo "Error: REDIS_PORT is not a valid integer: $REDIS_PORT"
@@ -83,7 +84,7 @@ fi
 
 # Start the Admin application
 echo Starting the Dragon Panel application
-
+echo TODO
 
 # Start the application
 echo "Starting the Dragon API"
