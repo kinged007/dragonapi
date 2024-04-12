@@ -69,11 +69,19 @@ else
     fi
 fi
 
-$PYTHON main.py "$@"
+# Check if Redis is available and start the worker
 if [ -n "$REDIS_HOST" ]; then
+    echo Starting the Redis worker
     REDIS_PORT=${REDIS_PORT:-6379}
     REDIS_PASSWORD=${REDIS_PASSWORD:-''}
-    rq worker task_manager --url redis://:$REDIS_PASSWORD@$REDIS_HOST:$REDIS_PORT &
+    rq worker task_manager --url redis://default:$REDIS_PASSWORD@$REDIS_HOST:$REDIS_PORT &
 fi
 
-uvicorn app:app --host 0.0.0.0 "$@"
+# Start the Admin application
+echo Starting the Dragon Panel application
+
+
+# Start the application
+echo "Starting the Dragon API"
+$PYTHON main.py "$@"
+# uvicorn app:app --host 0.0.0.0 "$@"
