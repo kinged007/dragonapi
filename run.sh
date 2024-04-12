@@ -70,4 +70,10 @@ else
 fi
 
 $PYTHON main.py "$@"
-# uvicorn app:app --host 0.0.0.0 "$@"
+REDIS_HOST=${REDIS_HOST:-127.0.0.1}
+REDIS_PORT=${REDIS_PORT:-6379}
+REDIS_PASSWORD=${REDIS_PASSWORD:-''}
+
+rq worker task_manager --url redis://:$REDIS_PASSWORD@$REDIS_HOST:$REDIS_PORT &
+
+uvicorn app:app --host 0.0.0.0 "$@"
