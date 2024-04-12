@@ -72,7 +72,11 @@ fi
 # Check if Redis is available and start the worker
 if [ -n "$REDIS_HOST" ]; then
     echo Starting the Redis worker
-    REDIS_PORT=${REDIS_PORT:-6379}
+    REDIS_PORT=${REDIS_PORT:-'6379'}
+    if ! [[ "$REDIS_PORT" =~ ^[0-9]+$ ]]; then
+        echo "Error: REDIS_PORT is not a valid integer: $REDIS_PORT"
+        exit 1
+    fi
     REDIS_PASSWORD=${REDIS_PASSWORD:-''}
     rq worker task_manager --url redis://default:$REDIS_PASSWORD@$REDIS_HOST:$REDIS_PORT &
 fi
