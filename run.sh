@@ -79,7 +79,10 @@ if [ -n "$REDIS_HOST" ]; then
         exit 1
     fi
     REDIS_PASSWORD=${REDIS_PASSWORD:-''}
+    RQ_WORKER_PID=""
     rq worker task_manager --url redis://default:$REDIS_PASSWORD@$REDIS_HOST:$REDIS_PORT &
+    RQ_WORKER_PID=$!
+    trap "echo 'Stopping rq worker'; kill $RQ_WORKER_PID" EXIT
 fi
 
 # Start the Admin application
